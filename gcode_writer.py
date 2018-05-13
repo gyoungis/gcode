@@ -61,18 +61,7 @@ def findPerimY(layer, voxelSize):
 	return perim
 
 
-
-
-
-
-
-
-
 	# print('words')
-
-
-
-
 
 def getLayers():
 	layers = {} #{[{x, y, z}]}
@@ -100,7 +89,7 @@ def getLayers():
 def parseFile():
 
 	midPoints = open("hemisphere.txt", "r")
-	gcode = open("gcode.txt", "w+")
+
 
 	lines = midPoints.readlines()
 
@@ -137,7 +126,7 @@ def findPerim(layers, voxelSize):
 
 
 def writeGCode():
-
+	gcode = open("gcode.txt", "w")
 
 	#Start-Up code
 	gcode.write("G28 ;\n")  #home all axes
@@ -156,6 +145,11 @@ def writeGCode():
 	gcode.write("M82\n")
 	gcode.write("G92 E0\n")
 
+
+def getBoundaryPath(currentLayer):
+	path = {} #{[x, y]} holds path for 3d printing
+
+
 if __name__ == "__main__":
 	coords = parseFile()
 	layers, voxelSize = getLayers()
@@ -165,3 +159,8 @@ if __name__ == "__main__":
 	for coord in perim:
 		# print(coord)
 		print('%s, %s, %s' % (coord['x'], coord['y'], coord['z']))
+
+	layer1 = np.split(layers, np.where(orig[:-1, 2] != orig[1:, 2])[0]+1)
+	print(layer1)
+
+	writeGCode()
