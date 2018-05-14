@@ -1,3 +1,7 @@
+import numpy as np
+import scipy
+import pandas
+
 def getYLayers(coords):
 	layers = {} #{[{x, y, z}]}
 	for coord in coords: #partition by z value
@@ -160,7 +164,7 @@ if __name__ == "__main__":
 		# print(coord)
 		print('%s, %s, %s' % (coord['x'], coord['y'], coord['z']))
 
-	layer1 = np.split(layers, np.where(orig[:-1, 2] != orig[1:, 2])[0]+1)
+	layer1 = np.split(layers, np.where(layers[:-1, 2] != layers[1:, 2])[0]+1)
 	print(layer1)
 
 	writeGCode()
