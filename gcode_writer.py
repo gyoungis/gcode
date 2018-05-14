@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 import pandas
+from pprint import pprint
 
 def getYLayers(coords):
 	layers = {} #{[{x, y, z}]}
@@ -69,11 +70,13 @@ def findPerimY(layer, voxelSize):
 
 def getLayers():
 	layers = {} #{[{x, y, z}]}
+	zValues = []
 	i = 0
 	for coord in coords: #partition by z value
 
 		if (coord['z'] not in layers):
 			layers[coord['z']] = []
+			zValues.append(coord['z'])
 		layers[coord['z']].append(coord)
 
 	diff = 0
@@ -84,7 +87,9 @@ def getLayers():
 			diff -= z
 			diff = abs(diff)
 			break
-	return (layers, diff)
+
+	print(zValues)
+	return (layers, diff, zValues)
 
 
 
@@ -154,17 +159,35 @@ def getBoundaryPath(currentLayer):
 	path = {} #{[x, y]} holds path for 3d printing
 
 
+def seperateLayers(perim, zValues):
+	for value in zValues:
+		getPath(value, perim)
+		#print(value)
+
+
+def getPath(value, perim):
+	curLevel = []
+	for coord in perim:
+		if coord['z'] == value:
+			curLevel.append(coord)
+
+	print(curLevel)
+
+
+
 if __name__ == "__main__":
 	coords = parseFile()
-	layers, voxelSize = getLayers()
+	layers, voxelSize, zValues = getLayers()
 	# print(layers[0.971563])
 	perim = findPerim(layers, voxelSize)
 	print('%s, %s, %s' % ('x', 'y', 'z'))
-	for coord in perim:
-		# print(coord)
-		print('%s, %s, %s' % (coord['x'], coord['y'], coord['z']))
+	seperateLayers(perim, zValues)
 
-	layer1 = np.split(layers, np.where(layers[:-1, 2] != layers[1:, 2])[0]+1)
-	print(layer1)
+	
+	#for coord in perim:
+		# print(coord)
+		#print('%s, %s, %s' % (coord['x'], coord['y'], coord['z']))
+
+
 
 	writeGCode()
