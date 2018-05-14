@@ -155,8 +155,10 @@ def writeGCode():
 	gcode.write("G92 E0\n")
 
 
-def getBoundaryPath(currentLayer):
+def getBoundaryPath(curLevel):
 	path = {} #{[x, y]} holds path for 3d printing
+	currentLayer = curLevel
+	
 
 
 def seperateLayers(perim, zValues):
@@ -172,6 +174,8 @@ def getPath(value, perim):
 			curLevel.append(coord)
 
 	print(curLevel)
+
+
 
 
 
