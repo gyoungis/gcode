@@ -158,16 +158,24 @@ def writeGCode():
 def getBoundaryPath(curLevel):
 	path = {} #{[x, y]} holds path for 3d printing
 	currentLayer = curLevel
+	#print(curLevel)
+	minpoint = []
 	
+
 
 
 def seperateLayers(perim, zValues):
 	for value in zValues:
-		getPath(value, perim)
+		curLevel = []
+		for coord in perim:
+			if coord['z'] == value:
+				curLevel.append(coord)
+
+		getBoundaryPath(curLevel)
 		#print(value)
 
 
-def getPath(value, perim):
+#def getPath(value, perim):
 	curLevel = []
 	for coord in perim:
 		if coord['z'] == value:
