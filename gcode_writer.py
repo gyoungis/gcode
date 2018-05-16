@@ -80,15 +80,25 @@ def getLayers():
 		layers[coord['z']].append(coord)
 
 	diff = 0
+	#for z, layer in layers.items():
+	counter = 0
 	for z, layer in layers.items():
-		if (i == 0):
+		if (counter == 0):
 			diff = z
-		elif (i == 1):
+			#diff = layer
+			counter += 1
+		elif (counter == 1):
 			diff -= z
+			#diff -= layer
 			diff = abs(diff)
 			break
 
+
+
+
 	print(zValues)
+	print("voxel Size is ")
+	print(diff)
 	return (layers, diff, zValues)
 
 
@@ -155,33 +165,129 @@ def writeGCode():
 	gcode.write("G92 E0\n")
 
 
-def getBoundaryPath(curLevel):
+def getBoundaryPath(curLevel, voxelSize):
 	path = {} #{[x, y]} holds path for 3d printing
 	currentLayer = curLevel
+	radius = np.sqrt(voxelSize**2 + voxelSize**2)
 	#print(curLevel)
-	minpoint = []
+	minPoint = getMinPoint(currentLayer)
+	currentPoint = minPoint
+	refPoint = pathSetup(currentLayer, radius, minPoint)
+	#print(minPoint)
+	path.update(minPoint)
+	path.update(refPoint)
+	moveTo = {}
+
+
+	while moveTo != minPoint:
+		moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
+		path.update(moveTo)
+		currentPoint = refPoint
+		refPoint = moveTo
+
+
+
+
+def findRightMost(curLevel, radius, currentPoint, refPoint):
+	counter = 0
+	moveTo = {}
+	for coord in curLevel:
+		distance = np.sqrt((coord['x'] - refPoint['x'])**2 + (coord['y'] - refPoint['y'])**2)
+		if distance <= radius:
+			xProd = (refPoint['x'] - currentPoint['x']) * (coord['y'] - currentPoint['y']) - (refPoint['y'] - currentPoint['y']) * (coord['x'] - currentPoint['x'])
+			if counter < 1:
+				turnIndex = xProd
+				moveTo = coord
+				counter += 1
+			else:
+				if xProd < turnIndex:
+					turnIndex = xProd
+					moveTo = coord
+
+	return moveTo
+
+
 	
+					
+
+def pathSetup(curLevel, radius, minPoint):
+	#Gets first first move for each layer
+	state1 = {}
+	state2 = {}
+	state3 = {}
+	state4 = {}
+	nextPoint = {}
+	for coord in curLevel:
+		if coord['x'] > minPoint['x']:
+			if coord['y'] == minPoint['y']:
+				state1 = coord
+			else:
+				state2 = coord
+		if coord['x'] == minPoint['x']:
+			state3 = coord
+		if coord['x'] > minPoint['x']:
+			state4 = coord
+
+	if state1 is not None:
+		nextPoint = state1
+
+	if state1 is None and state2 is not None:
+		nextPoint = state2
+
+	if state1 is None and state2 is None and state3 is not None:
+		nextPoint = state3
+
+	if state1 is None and state2 is None and state3 is None and state4 is not None:
+		nextPoint = state4
+
+	return nextPoint
 
 
 
-def seperateLayers(perim, zValues):
+
+	
+def getMinPoint(curLevel):
+	minPoint = curLevel[0]
+	for coord in curLevel: #Find minimum y-coordinate
+		if coord['y'] <= minPoint['y']:
+			minPoint = coord
+
+	for coord in curLevel: #If multiple min-y, pick the min-x
+		if coord['y'] == minPoint['y']:
+			if coord['x'] < minPoint['x']:
+				minPoint = coord
+
+	return minPoint
+
+
+def nextPoint(currentPoint, radius, curLevel):
+	
+	for coord in curLevel:
+		distance = np.sqrt((coord['x']-currentPoint['x'])**2 + (coord['y']-currentPoint['y'])**2)
+		#if distance <= radius:
+
+
+
+
+def seperateLayers(perim, zValues, voxelSize):
+
 	for value in zValues:
 		curLevel = []
 		for coord in perim:
 			if coord['z'] == value:
 				curLevel.append(coord)
 
-		getBoundaryPath(curLevel)
-		#print(value)
+		getBoundaryPath(curLevel, voxelSize)
+		print(value)
 
 
 #def getPath(value, perim):
-	curLevel = []
-	for coord in perim:
-		if coord['z'] == value:
-			curLevel.append(coord)
+	#curLevel = []
+	#for coord in perim:
+	#	if coord['z'] == value:
+	#		curLevel.append(coord)
 
-	print(curLevel)
+	#print(curLevel)
 
 
 
@@ -191,9 +297,10 @@ if __name__ == "__main__":
 	coords = parseFile()
 	layers, voxelSize, zValues = getLayers()
 	# print(layers[0.971563])
+	#print(voxelSize)
 	perim = findPerim(layers, voxelSize)
 	print('%s, %s, %s' % ('x', 'y', 'z'))
-	seperateLayers(perim, zValues)
+	seperateLayers(perim, zValues, voxelSize)
 
 	
 	#for coord in perim:
