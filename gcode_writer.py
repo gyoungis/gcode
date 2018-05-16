@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 import pandas
 from pprint import pprint
-
+import visualize_perim as vp
 def getYLayers(coords):
 	layers = {} #{[{x, y, z}]}
 	for coord in coords: #partition by z value
@@ -197,9 +197,9 @@ def writeGCode():
 
 
 def getBoundaryPath(curLevel, voxelSize):
-	path = {} #{[x, y]} holds path for 3d printing
+	path = [] #{[x, y]} holds path for 3d printing
 	currentLayer = curLevel
-	radius = np.sqrt(voxelSize**2 + voxelSize**2)
+	radius = 2 *np.sqrt(voxelSize**2 + voxelSize**2)
 	#print("this is radius: ")
 	#print(radius)
 	#print(curLevel)
@@ -209,21 +209,31 @@ def getBoundaryPath(curLevel, voxelSize):
 	###print(minPoint)
 	refPoint = pathSetup(currentLayer, radius, minPoint)
 	
-	path.update(minPoint)
-	path.update(refPoint)
+	path.append(minPoint)
+	path.append(refPoint)
 	moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
 	#print(moveTo)
+
+
+	# minPoint = refPoint
+	# refPoint = moveTo
+	# moveTo = findRightMost(curLevel, radius, currentPoint)
 	
 
 
-	# while moveTo != minPoint:
-	# 	moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
-	# 	# if (moveTo != refPoint):
-	# 	# 	print('minPoint: ', minPoint, 'moveTo: ', moveTo)
-	# 	path.update(moveTo)
-	# 	currentPoint = refPoint
+	while moveTo != minPoint:
+		moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
+		# if (moveTo != refPoint):
+		# 	print('minPoint: ', minPoint, 'moveTo: ', moveTo)
+		path.append(moveTo)
+		currentPoint = refPoint
 
-	# 	refPoint = moveTo
+		refPoint = moveTo
+
+	print(path)
+	vp.show_level_path(path)
+
+
 
 	
 
@@ -287,7 +297,7 @@ def pathSetup(curLevel, radius, minPoint):
 		distance = np.sqrt((coord['x'] - minPoint['x'])**2 + (coord['y'] - minPoint['y'])**2)
 		# print("this is distance: ")
 		# print(distance)
-		if not pointEquals(coord, minPoint) and distance <= (radius * 2):
+		if not pointEquals(coord, minPoint) and distance <= radius:
 
 			if coord['x'] > minPoint['x']:
 				if coord['y'] == minPoint['y']:
