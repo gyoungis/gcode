@@ -176,24 +176,45 @@ def getBoundaryPath(curLevel, voxelSize):
 	#print(minPoint)
 	path.update(minPoint)
 	path.update(refPoint)
-	moveTo = {}
+	moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
+	#print(moveTo)
 
 
-	while moveTo != minPoint:
-		moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
-		path.update(moveTo)
-		currentPoint = refPoint
-		refPoint = moveTo
+	# while moveTo != minPoint:
+	# 	moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
+	# 	# if (moveTo != refPoint):
+	# 	# 	print('minPoint: ', minPoint, 'moveTo: ', moveTo)
+	# 	path.update(moveTo)
+	# 	currentPoint = refPoint
+
+	# 	refPoint = moveTo
+	# 	print('refPoint: ', refPoint)
 
 
 
+def pointEquals(point1, point2):
+	ret = point1['x'] == point2['x'] and point1['y'] == point2['y'] and point1['z'] == point2['z']
+	#print(ret)
+	return ret
+
+
+def validPoint(point):
+	if 'x' in point and 'y' in point and 'z' in point:
+		return point['x'] != None and point['y'] != None and point['z'] != None
+	return False
 
 def findRightMost(curLevel, radius, currentPoint, refPoint):
 	counter = 0
 	moveTo = {}
+
 	for coord in curLevel:
+		if not validPoint(coord) or not validPoint(refPoint) or not validPoint(currentPoint):
+			print('Invalid point one of: ', coord, refPoint, currentPoint)
+			pass
+		# print(coord)
+
 		distance = np.sqrt((coord['x'] - refPoint['x'])**2 + (coord['y'] - refPoint['y'])**2)
-		if distance <= radius:
+		if not pointEquals(coord, refPoint) and not pointEquals(coord, currentPoint) and distance <= radius:#distance <= radius and coord != refPoint:
 			xProd = (refPoint['x'] - currentPoint['x']) * (coord['y'] - currentPoint['y']) - (refPoint['y'] - currentPoint['y']) * (coord['x'] - currentPoint['x'])
 			if counter < 1:
 				turnIndex = xProd
@@ -203,7 +224,8 @@ def findRightMost(curLevel, radius, currentPoint, refPoint):
 				if xProd < turnIndex:
 					turnIndex = xProd
 					moveTo = coord
-
+	print("this is move to ")
+	print(moveTo)
 	return moveTo
 
 
