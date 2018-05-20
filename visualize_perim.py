@@ -6,7 +6,7 @@ def visualize_file():
 	x = []
 	y = []
 	z = []
-	with open('perim.csv', 'r') as f:
+	with open('perimsmall.csv', 'r') as f:
 		lines = f.readlines()
 	i = 0
 	for line in lines:
@@ -17,7 +17,7 @@ def visualize_file():
 		split = line.split(',')
 		x.append(float(split[0]))
 		y.append(float(split[1]))
-		z.append(float(split[2]))
+		z.append(float(0))
 
 
 	print(x, y, z)

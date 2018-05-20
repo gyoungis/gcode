@@ -3,7 +3,13 @@ import scipy
 import pandas
 from pprint import pprint
 import visualize_perim as vp
+import pathTogCode as ptG
+
+
+
 def getYLayers(coords):
+	#Find Y-dimension of layer
+
 	layers = {} #{[{x, y, z}]}
 	for coord in coords: #partition by z value
 
@@ -16,6 +22,8 @@ def getYLayers(coords):
 	return layers
 
 def getXLayers(coords):
+	#Find X-dimension of layer
+
 	layers = {}
 	for coord in coords:
 
@@ -31,32 +39,15 @@ def getXLayers(coords):
 
 
 def findPerimY(layer, voxelSize):
-	#print(layer[0]['x'])
-	#array of point objects {x, y, z}
-	#create 2d array like layers with 1st dimension as y values and 2nd as x values of that y position
-	#for each y
-		#sort x values
-	#for each y
-		#state = something
-		#add y[0] to perim
-		#val = 0
-		#for i in len(y) val += voxelSize
-			#case nothing:
-				#if something
-					#add point to perim
-					#state = something
-			#case something
-				#if nothing
-					#add prev to perim
-					#state = nothing
-				#prev = cur
-		#add y[lastIndex] to perim
-	#return set of points on perim
+	#Find all perimeter points
 
+	#Get dimensions of layer
 	yLayers = getYLayers(layer)
 	xLayers = getXLayers(layer)
+
+
 	i = 0
-	# print(yLayers
+	#Search for boundary points along each y-coordinate
 	perim = []
 	for _, yLayer in yLayers.items():
 		state = 'inShape'
@@ -75,7 +66,7 @@ def findPerimY(layer, voxelSize):
 			prev = coord
 		perim.append(yLayer[len(yLayer) - 1])
 
-
+	#Search for boundary points along each x-coordinate
 	for _, xLayer in xLayers.items():
 		state = 'inShape'
 		perim.append(xLayer[0])
@@ -97,9 +88,10 @@ def findPerimY(layer, voxelSize):
 	return perim
 
 
-	# print('words')
+
 
 def getLayers():
+	#Find Z-values for each of the layers to be printed
 	layers = {} #{[{x, y, z}]}
 	zValues = []
 	i = 0
@@ -137,7 +129,7 @@ def getLayers():
 
 
 def parseFile():
-
+	#Get point coordinates from the text file
 	midPoints = open("hemisphere.txt", "r")
 
 
@@ -165,6 +157,8 @@ def parseFile():
 
 
 def findPerim(layers, voxelSize):
+	#Get the values of all the boundary points in the model
+
 	perim = []
 	for _, layer in layers.items():
 		# print(layer[0]['x'])
@@ -175,28 +169,12 @@ def findPerim(layers, voxelSize):
 	return perim
 
 
-def writeGCode():
-	gcode = open("gcode.txt", "w")
 
-	#Start-Up code
-	gcode.write("G28 ;\n")  #home all axes
-	gcode.write("G92 E0\n")
-	gcode.write("G1 X30 Y30 F3000\n")
-	gcode.write("G1 Z5 F2000 ;\n")
-	gcode.write("G1 F3000 X220\n")
-	gcode.write("G1 F2000 Z0\n")
-	gcode.write("G1 F200 E10\n")
-	gcode.write("G1 F1000 E9\n")
-	gcode.write("G1 F3000 X190 Y50\n")
-	gcode.write("G92 E-1\n")
-	gcode.write("G1 F2000 Z1\n")
-	gcode.write("G21\n")
-	gcode.write("G90\n")
-	gcode.write("M82\n")
-	gcode.write("G92 E0\n")
 
 
 def getBoundaryPath(curLevel, voxelSize):
+	#Get path for the boundary of the layer
+
 	path = [] #{[x, y]} holds path for 3d printing
 	currentLayer = curLevel
 	radius = 2 *np.sqrt(voxelSize**2 + voxelSize**2)
@@ -222,6 +200,8 @@ def getBoundaryPath(curLevel, voxelSize):
 
 
 	while moveTo != minPoint:
+		#Keep adding points until you reach the starting point again
+
 		moveTo = findRightMost(curLevel, radius, currentPoint, refPoint)
 		# if (moveTo != refPoint):
 		# 	print('minPoint: ', minPoint, 'moveTo: ', moveTo)
@@ -231,7 +211,7 @@ def getBoundaryPath(curLevel, voxelSize):
 		refPoint = moveTo
 
 	print(path)
-	vp.show_level_path(path)
+	#vp.show_level_path(path)
 
 
 
@@ -241,17 +221,22 @@ def getBoundaryPath(curLevel, voxelSize):
 
 
 def pointEquals(point1, point2):
+	#Tests if the 2 points are the same
 	ret = point1['x'] == point2['x'] and point1['y'] == point2['y'] and point1['z'] == point2['z']
 	#print(ret)
 	return ret
 
 
 def validPoint(point):
+	#Tests if the point exists
+
 	if 'x' in point and 'y' in point and 'z' in point:
 		return point['x'] != None and point['y'] != None and point['z'] != None
 	return False
 
 def findRightMost(curLevel, radius, currentPoint, refPoint):
+	#Finds the next point on the path based on making right turns
+
 	counter = 0
 	moveTo = {}
 
@@ -267,7 +252,7 @@ def findRightMost(curLevel, radius, currentPoint, refPoint):
 		# print(coord)
 
 		distance = np.sqrt((coord['x'] - refPoint['x'])**2 + (coord['y'] - refPoint['y'])**2)
-		if not pointEquals(coord, refPoint) and not pointEquals(coord, currentPoint) and distance <= radius:#distance <= radius and coord != refPoint:
+		if not pointEquals(coord, refPoint) and not pointEquals(coord, currentPoint) and distance <= radius:
 			xProd = (refPoint['x'] - currentPoint['x']) * (coord['y'] - currentPoint['y']) - (refPoint['y'] - currentPoint['y']) * (coord['x'] - currentPoint['x'])
 			if counter < 1:
 				turnIndex = xProd
@@ -287,6 +272,7 @@ def findRightMost(curLevel, radius, currentPoint, refPoint):
 
 def pathSetup(curLevel, radius, minPoint):
 	#Gets first first move for each layer
+
 	state1 = {}
 	state2 = {}
 	state3 = {}
@@ -330,6 +316,8 @@ def pathSetup(curLevel, radius, minPoint):
 
 	
 def getMinPoint(curLevel):
+	#Finds the bottom-most and left-most point in the current layer
+
 	minPoint = curLevel[0]
 	for coord in curLevel: #Find minimum y-coordinate
 		if coord['y'] <= minPoint['y']:
@@ -347,6 +335,7 @@ def getMinPoint(curLevel):
 
 
 def seperateLayers(perim, zValues, voxelSize):
+	#Gets boundary path for each layer separately
 
 	for value in zValues:
 		curLevel = []
@@ -360,14 +349,6 @@ def seperateLayers(perim, zValues, voxelSize):
 		getBoundaryPath(curLevel, voxelSize)
 		
 
-
-#def getPath(value, perim):
-	#curLevel = []
-	#for coord in perim:
-	#	if coord['z'] == value:
-	#		curLevel.append(coord)
-
-	#print(curLevel)
 
 
 
@@ -390,4 +371,5 @@ if __name__ == "__main__":
 
 
 
-	writeGCode()
+	ptG.startUp()
+	#3D printer startup code
